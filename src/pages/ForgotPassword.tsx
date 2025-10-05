@@ -1,0 +1,131 @@
+import React, { useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Alert, AlertDescription } from "../components/ui/alert";
+
+export default function ForgotPassword() {
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const { resetPassword } = useAuth();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const { error } = await resetPassword(email);
+
+      if (error) {
+        let errorMessage = error.message;
+        if (error.message.includes("User not found")) {
+          errorMessage = "لم يتم العثور على حساب بهذا البريد الإلكتروني";
+        } else if (error.message.includes("Unable to validate email address")) {
+          errorMessage = "البريد الإلكتروني غير صالح";
+        }
+        setError(errorMessage);
+      } else {
+        setSuccess(true);
+      }
+    } catch (err) {
+      setError("حدث خطأ غير متوقع");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center bg-gray-50 p-4"
+        dir="rtl"
+      >
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold text-green-600">
+              تم إرسال الرابط!
+            </CardTitle>
+            <CardDescription>
+              تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. يرجى
+              التحقق من بريدك الإلكتروني واتباع التعليمات.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={() => (window.location.href = "/login")}
+              className="w-full"
+            >
+              العودة لتسجيل الدخول
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="min-h-screen flex items-center justify-center bg-gray-50 p-4"
+      dir="rtl"
+    >
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold text-gray-900">
+            إعادة تعيين كلمة المرور
+          </CardTitle>
+          <CardDescription>
+            أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة تعيين كلمة المرور
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="email">البريد الإلكتروني</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="text-right"
+                placeholder="أدخل بريدك الإلكتروني"
+              />
+            </div>
+
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "جاري الإرسال..." : "إرسال رابط إعادة التعيين"}
+            </Button>
+
+            <div className="text-center">
+              <Button
+                type="button"
+                variant="link"
+                onClick={() => (window.location.href = "/login")}
+              >
+                العودة لتسجيل الدخول
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
